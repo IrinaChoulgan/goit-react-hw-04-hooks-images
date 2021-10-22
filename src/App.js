@@ -24,7 +24,12 @@ export default function App() {
 
   useEffect(
     prev => {
-      if ((prev !== searchValue && searchValue !== '') || prev !== page) {
+      if (searchValue === '') {
+        return;
+      } else if (
+        (prev !== searchValue && searchValue !== '') ||
+        prev !== page
+      ) {
         searchImagesHandler();
       }
     },
