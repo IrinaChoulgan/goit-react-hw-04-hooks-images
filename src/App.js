@@ -9,6 +9,9 @@ import Button from './components/Button/Button';
 import Loader from './components/Loader/Loader';
 import Modal from './components/Modal/Modal';
 
+let maxPages = 0;
+let bigURL = '';
+
 export default function App() {
   const [images, setImages] = useState([]);
   const [searchValue, setSearchValue] = useState('');
@@ -16,20 +19,37 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState('');
-  let maxPages = 0;
-  const [bigURL] = '';
+  // let maxPages = 0;
+  // let bigURL = '';
 
-  useEffect(() => {
-    if (searchValue !== '') {
-      searchImagesHandler();
-    }
-  }, [searchValue]);
+  useEffect(
+    prev => {
+      if ((prev !== searchValue && searchValue !== '') || prev !== page) {
+        searchImagesHandler();
+      }
+    },
+    [searchValue, page],
+  );
 
-  const loadMoreHandler = () => {
-    scrollToHandler();
-    setPage(Math.min(maxPages, page + 1));
+  const closeModal = () => {
+    bigURL = '';
+    setShowModal(false);
   };
 
+  const showImageHandler = imageUrl => () => {
+    bigURL = imageUrl;
+    setShowModal(true);
+  };
+  const scrollToHandler = () => {
+    const top = document.documentElement.scrollHeight - 150;
+
+    setTimeout(() => {
+      window.scrollTo({
+        top,
+        behavior: 'smooth',
+      });
+    }, 300);
+  };
   const searchImagesHandler = async () => {
     setIsLoading(true);
     setError('');
@@ -39,7 +59,7 @@ export default function App() {
       if (result.total !== 0) {
         maxPages = Math.ceil(result.totalHits / 12);
 
-        setImages([...images, ...result.hits]);
+        setImages(prev => [...prev, ...result.hits]);
       } else {
         toast.info(`По вашему запросу ${searchValue} ничего не найдено!`);
         setImages([]);
@@ -51,6 +71,11 @@ export default function App() {
       setIsLoading(false);
     }
   };
+  const loadMoreHandler = () => {
+    scrollToHandler();
+    setPage(() => Math.min(maxPages, page + 1));
+  };
+
   const onSubmitHandler = searchString => {
     maxPages = 0;
     setImages([]);
@@ -58,40 +83,19 @@ export default function App() {
     setPage(1);
   };
 
-  const scrollToHandler = () => {
-    const top = document.documentElement.scrollHeight - 150;
-
-    setTimeout(() => {
-      window.scrollTo({
-        top,
-        behavior: 'smooth',
-      });
-    }, 300);
-  };
-
-  const showImageHandler = imageUrl => () => {
-    bigURL(imageUrl);
-    setShowModal(true);
-  };
-  const closeModal = () => {
-    bigURL('');
-    setShowModal(false);
-  };
-
   return (
     <div className="App">
       <Searchbar onSubmit={onSubmitHandler} />
-      {error ? (
-        <p className="ErrorText">{error}</p>
-      ) : (
+      {images.length > 0 && (
         <ImageGallery
           images={images}
           showImageHandler={showImageHandler}
           scrollToHandler={scrollToHandler}
         />
       )}
+      {error && <p className="ErrorText">{error}</p>}
       {isLoading && <Loader />}
-      {page < maxPages && <Button loadMoreHandler={loadMoreHandler} />}
+      {images.length > 0 && <Button loadMoreHandler={loadMoreHandler} />}
       {showModal && <Modal bigURL={bigURL} onClose={closeModal}></Modal>}
       <ToastContainer autoClose={2500} />
     </div>
@@ -121,15 +125,15 @@ export default function App() {
 //     }
 //   }
 
-//   closeModal = () => {
-//     this.bigURL = '';
-//     this.setState({ showModal: false });
-//   };
+// closeModal = () => {
+//   this.bigURL = '';
+//   this.setState({ showModal: false });
+// };
 
-//   showImageHandler = imageUrl => () => {
-//     this.bigURL = imageUrl;
-//     this.setState({ showModal: true });
-//   };
+// showImageHandler = imageUrl => () => {
+//   this.bigURL = imageUrl;
+//   this.setState({ showModal: true });
+// };
 
 //   scrollToHandler = () => {
 //     const top = document.documentElement.scrollHeight - 150;
@@ -168,12 +172,12 @@ export default function App() {
 //     }
 //   };
 
-//   loadMoreHandler = () => {
-//     this.scrollToHandler();
-//     this.setState(() => ({
-//       page: Math.min(this.maxPages, this.state.page + 1),
-//     }));
-//   };
+// loadMoreHandler = () => {
+//   this.scrollToHandler();
+//   this.setState(() => ({
+//     page: Math.min(this.maxPages, this.state.page + 1),
+//   }));
+// };
 
 //   onSubmitHandler = searchString => {
 //     this.maxPages = 0;
